@@ -1,2 +1,2 @@
 # isamrs-deploy
-Ja sam svetski mega car.
+Deploy verzija projekta iz predmeta Internet Softverske Arhitekture.
