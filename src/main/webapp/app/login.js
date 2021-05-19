@@ -7,6 +7,7 @@ Vue.component("pocetna-strana", {
 	template: ` 
 <div align = center>
 		<h1>Login korisnika: </h1>
+		<br/>
 		<table>
 			<tr>
 				<td> <h2>Username:</h2> </td> <td> <input type="text" name="username" /> </td>
@@ -16,7 +17,7 @@ Vue.component("pocetna-strana", {
 			</tr>
 			<tr>
 				<td align=center colspan=2>
-					<input type="button" value="Posalji" v-on:click="logUserIn()"/>
+					<input type="button" class="button1" value="Posalji" v-on:click="logUserIn()"/>
 				</td>
 			</tr>
 		</table>
@@ -45,13 +46,21 @@ Vue.component("pocetna-strana", {
 						}else if(resp.data.zaposlenjeKorisnika == "FARMACEUT"){
 							temp.$router.push({ path: "/farmaceuti" });
 						}else if(resp.data.zaposlenjeKorisnika == "DOBAVLJAC"){
-							temp.$router.push({ path: "/tab" });
+							if(resp.data.loggedBefore) {
+								temp.$router.push({ path: "/tab" });
+							} else {
+								temp.$router.push({ path: "/promeniSifru" });
+							}
 						}else if(resp.data.zaposlenjeKorisnika == "DERMATOLOG"){
 							temp.$router.push({ path: "/dermatolozi" });
 						}else if(resp.data.zaposlenjeKorisnika == "PACIJENT"){
 							temp.$router.push({ path: "/apoteke/0" });
 						}else {
-							temp.$router.push({ path: "/regDerm" });
+							if(resp.data.loggedBefore) {
+								temp.$router.push({ path: "/regDerm" });
+							} else {
+								temp.$router.push({ path: "/promeniSifru" });
+							}
 						}
 						
 					});

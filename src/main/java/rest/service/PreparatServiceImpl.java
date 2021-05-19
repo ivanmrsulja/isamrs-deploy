@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import rest.domain.Apoteka;
 import rest.domain.DostupanProizvod;
+import rest.domain.Korisnik;
 import rest.domain.Pacijent;
 import rest.domain.Preparat;
 import rest.domain.Rezervacija;
@@ -72,6 +73,12 @@ public class PreparatServiceImpl implements PreparatService{
 	public Collection<Preparat> getAllForPharmacy(int id) {
 		return cenaRepository.drugsForPharmacy(id);
 	}
+	
+	@Override
+	public Preparat create(Preparat cure) throws Exception {
+		Preparat savedCure = preparatRepository.save(cure);
+		return savedCure;
+	}
 
 	@Override
 	@Async
@@ -97,7 +104,7 @@ public class PreparatServiceImpl implements PreparatService{
 
 	@Override
 	public void otkazi(int idr, int id) throws Exception {
-		Rezervacija r = rezervacijaRepository.findById(idr).get();
+		Rezervacija r = rezervacijaRepository.findOneById(idr);
 		
 		if(r.getPacijent().getId() != id) {
 			throw new Exception("Ne mozeee :)");
@@ -114,7 +121,7 @@ public class PreparatServiceImpl implements PreparatService{
 		
 		r.setStatus(StatusRezervacije.OTKAZANO);
 		Apoteka a = r.getApoteka();
-		DostupanProizvod dp = cenaRepository.getCount(r.getPreparat().getId(), a.getId());
+		DostupanProizvod dp = cenaRepository.getProduct(r.getPreparat().getId(), a.getId());
 		dp.setKolicina(dp.getKolicina() + 1);
 		dostupanRepo.save(dp);
 		rezervacijaRepository.save(r);
@@ -122,7 +129,7 @@ public class PreparatServiceImpl implements PreparatService{
 
 	@Override
 	public Rezervacija rezervisi(int idp, int idpa, int ida, LocalDate datum) throws Exception {
-		DostupanProizvod dp = cenaRepository.getCount(idp, ida);
+		DostupanProizvod dp = cenaRepository.getProduct(idp, ida);
 		
 		int brojPenala = pacijentRepository.getNumOfPenalities(idpa);
 		if(brojPenala >= 3) {

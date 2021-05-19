@@ -2,6 +2,7 @@ package rest.dto;
 
 import rest.domain.Preparat;
 import rest.domain.RezimIzdavanja;
+import rest.domain.TipLeka;
 
 public class PreparatDTO {
 
@@ -14,7 +15,11 @@ public class PreparatDTO {
 	private String oblik;
 	private String proizvodjac;
 	private RezimIzdavanja rezim;
+	private TipLeka tip;
 	private double ocena;
+	private int poeni;
+	private double brojOcena;
+	private double sumaOcena;
 	
 	public PreparatDTO()
 	{}
@@ -22,7 +27,10 @@ public class PreparatDTO {
 	{
 		this.id=preparat.getId();
 		this.naziv=preparat.getNaziv();
-		
+		this.tip = preparat.getTip();
+		this.brojOcena = preparat.getBrojOcena();
+		this.sumaOcena = preparat.getSumaOcena();
+		this.poeni = preparat.getPoeni();
 		this.kontraindikacije=preparat.getKontraindikacije();
 		this.sastav=preparat.getSastav();
 		this.preporuceniUnos=preparat.getPreporuceniUnos();
@@ -30,6 +38,7 @@ public class PreparatDTO {
 		this.proizvodjac=preparat.getProizvodjac();
 		this.rezim=preparat.getIzdavanje();
 		this.ocena=preparat.getOcena();
+		this.tip = preparat.getTip();
 	}
 	public Integer getId() {
 		return id;
@@ -42,6 +51,25 @@ public class PreparatDTO {
 	}
 	public void setNaziv(String naziv) {
 		this.naziv = naziv;
+	}
+	public int getPoeni() {
+		return poeni;
+	}
+	public void setPoeni(int poeni) {
+		this.poeni = poeni;
+	}
+
+	public double getBrojOcena() {
+		return brojOcena;
+	}
+	public void setBrojOcena(double brojOcena) {
+		this.brojOcena = brojOcena;
+	}
+	public double getSumaOcena() {
+		return sumaOcena;
+	}
+	public void setSumaOcena(double sumaOcena) {
+		this.sumaOcena = sumaOcena;
 	}
 	public String getKontraindikacije() {
 		return kontraindikacije;
@@ -85,5 +113,13 @@ public class PreparatDTO {
 	public void setOcena(double ocena) {
 		this.ocena = ocena;
 	}
+	public TipLeka getTip() {
+		return tip;
+	}
+	public void setTip(TipLeka tip) {
+		this.tip = tip;
+	}
+	
+	
 	
 }

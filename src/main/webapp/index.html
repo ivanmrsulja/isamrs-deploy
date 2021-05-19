@@ -35,11 +35,21 @@
 <a class="navigacija" href="#/apoteke/0" v-bind:hidden="korisnik.zaposlenjeKorisnika == 'ADMIN_SISTEMA' || korisnik.zaposlenjeKorisnika=='DERMATOLOG' || korisnik.zaposlenjeKorisnika=='FARMACEUT' || korisnik.zaposlenjeKorisnika=='DOBAVLJAC' || korisnik.zaposlenjeKorisnika=='ADMIN_APOTEKE'">Pocetna</a>
 <a class="navigacija" href="#/preparati" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'DERMATOLOG' && korisnik.zaposlenjeKorisnika != 'FARMACEUT' && korisnik.zaposlenjeKorisnika != 'PACIJENT'&& korisnik.zaposlenjeKorisnika != 'GOST'">Preparati</a>
 <a class="navigacija" href="#/profileApoteke" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'ADMIN_APOTEKE'">Profil Apoteke</a>
+<a class="navigacija" href="#/profilAdminaApoteke" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'ADMIN_APOTEKE'">Moj profil</a>
+<a class="navigacija" href="#/pregledZahtevaFarmaceuta" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'ADMIN_APOTEKE'">Zahtevi</a>
 <a class="navigacija" href="#/registracijaFarmaceuta" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'ADMIN_APOTEKE'">Registracija farmaceuta</a>
+<a class="navigacija" href="#/definicijaAkcijePromocije" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'ADMIN_APOTEKE'">Akcije/Promocije</a>
+<a class="navigacija" href="#/definicijaCenovnika" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'ADMIN_APOTEKE'">Cenovnik</a>
+<a class="navigacija" href="#/pisanjeNarudzbenice" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'ADMIN_APOTEKE'">Pisanje narudzbenice</a>
+<a class="navigacija" href="#/pregledNarudzbenica" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'ADMIN_APOTEKE'">Pregled narudzbenica</a>
+<a class="navigacija" href="#/preparatiApoteke" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'ADMIN_APOTEKE'">Preparati</a>
 <a class="navigacija" href="#/register" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'GOST'">Register</a>
 <a class="navigacija" href="#/" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'GOST'">Login</a>
 <a class="navigacija" href="#/profilPacijenta" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'PACIJENT'">Moj Profil</a>
+<a class="navigacija" href="#/pretragaStrucnjaka" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'PACIJENT'">Pretraga</a>
 <a class="navigacija" href="#/regDerm" v-bind:hidden="korisnik.zaposlenjeKorisnika !='ADMIN_SISTEMA'">Registrovanje dermatologa</a>
+<a class="navigacija" href="#/registracijaAdminaSistema" v-bind:hidden="korisnik.zaposlenjeKorisnika !='ADMIN_SISTEMA'">Registrovanje admina sistema</a>
+<a class="navigacija" href="#/noviLek" v-bind:hidden="korisnik.zaposlenjeKorisnika !='ADMIN_SISTEMA'">Dodavanje leka</a>
 <a class="navigacija" href="#/regSupp" v-bind:hidden="korisnik.zaposlenjeKorisnika !='ADMIN_SISTEMA'">Registrovanje dobavljaca</a>
 <a class="navigacija" href="#/istorijaPregleda/0/PLAIN" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'PACIJENT'">Istorija pregleda</a>
 <a class="navigacija" href="#/zakazaniPregledi/0" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'PACIJENT'">Zakazani pregledi</a>
@@ -51,11 +61,12 @@
 
 <a class="navigacija" href="#/tab" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'DOBAVLJAC'">Moje ponude</a>
 <a class="navigacija" href="#/dermatolozi" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'DERMATOLOG'">Profil Dermatologa</a>
-<a class="navigacija" href="#/pregledi" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'DERMATOLOG'">Lista Pregleda</a>
+<a class="navigacija" href="#/pregledi" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'DERMATOLOG'">Radni Kalendar</a>
 <a class="navigacija" href="#/farmaceuti" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'FARMACEUT'">Profil Farmaceuta</a>
 <a class="navigacija" href="#/savetovanja" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'FARMACEUT'">Lista Savetovanja</a>
-
+<a class="navigacija" href="#/updateSupp" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'DOBAVLJAC'">Azuriranje podataka</a>
 <a class="navigacija" href="#/pacijenti" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'DERMATOLOG' && korisnik.zaposlenjeKorisnika != 'FARMACEUT'">Pacijenti</a>
+<a class="navigacija" href="#/godisnji" v-bind:hidden="korisnik.zaposlenjeKorisnika != 'DERMATOLOG' && korisnik.zaposlenjeKorisnika != 'FARMACEUT'">Odmor/Odsustvo</a>
 
 <a class="navigacija" href="#/" v-on:click="logout()"  v-bind:hidden="korisnik.zaposlenjeKorisnika == 'GOST'">Logout</a>
 <br/>
@@ -89,6 +100,7 @@
 <script src="https://kit.fontawesome.com/362958a6ea.js" crossorigin="anonymous"></script>
 <script src="css/ol.js"></script>
 <script src="app/ponudeTable.js"></script>
+<script src="app/promenaSifre.js"></script>
 <script src="app/login.js"></script>
 <script src="app/registracija.js"></script>
 <script src="app/pregledApoteka.js"></script>
@@ -106,6 +118,7 @@
 <script src="app/pregledPojedinacnogPreparata.js"></script>
 <script src="app/akcijePromocijePregled.js"></script>
 <script src="app/registracijaFarmaceuta.js"></script>
+<script src="app/registracijaApoteka.js"></script>
 <script src="app/registracijaDobavljaca.js"></script>
 <script src="app/registracijaDermatologa.js"></script>
 <script src="app/pacijentTable.js"></script>
@@ -117,6 +130,20 @@
 <script src="app/zakazivanjeTermina.js"></script>
 <script src="app/radniKalendar.js"></script>
 <script src="app/radniKalendarFarmaceut.js"></script>
+<script src="app/dodajLek.js"></script>
+<script src="app/registracijaAdminaSistema.js"></script>
+<script src="app/registracijaAdminaApoteke.js"></script>
+<script src="app/updateSupp.js"></script>
+<script src="app/profilAdminaApoteke.js"></script>
+<script src="app/pretragaStrucnjaka.js"></script>
+<script src="app/pregledZahtevaFarmaceuta.js"></script>
+<script src="app/definicijaAkcijePromocije.js"></script>
+<script src="app/definicijaCenovnika.js"></script>
+<script src="app/pregledNarudzbenica.js"></script>
+<script src="app/preparatiApoteke.js"></script>
+<script src="app/pisanjeNarudzbenice.js"></script>
+<script src="app/odabirPonude.js"></script>
+<script src="app/godisnjiOdmor.js"></script>
 
 <script src="app/app.js"></script>
 </body>

@@ -23,6 +23,7 @@ import rest.domain.DostupanProizvod;
 import rest.domain.ERecept;
 import rest.domain.Farmaceut;
 import rest.domain.Lokacija;
+import rest.domain.NaruceniProizvod;
 import rest.domain.Narudzbenica;
 import rest.domain.Pacijent;
 import rest.domain.Penal;
@@ -33,13 +34,17 @@ import rest.domain.Rezervacija;
 import rest.domain.RezimIzdavanja;
 import rest.domain.StatusERecepta;
 import rest.domain.StatusNaloga;
+import rest.domain.StatusNarudzbenice;
 import rest.domain.StatusPonude;
 import rest.domain.StatusPregleda;
 import rest.domain.StatusRezervacije;
+import rest.domain.StatusZahtjeva;
 import rest.domain.StavkaRecepta;
 import rest.domain.TipKorisnika;
 import rest.domain.TipLeka;
 import rest.domain.TipPregleda;
+import rest.domain.TipZahtjeva;
+import rest.domain.Zahtjev;
 import rest.domain.Zaposlenje;
 import rest.domain.ZaposlenjeKorisnika;
 
@@ -74,6 +79,10 @@ public class DBInitialiser implements ApplicationRunner {
 	private PregledRepository pregledRepo;
 	@Autowired
 	private AkcijaPromocijaRepository akcijaRepo;
+	@Autowired
+	private ZahtevRepository zahtevRepo;
+	@Autowired
+	private NaruceniProizvodRepository naruceniProizvodRepo;
 	
 	@Override
 	@Transactional
@@ -124,7 +133,7 @@ public class DBInitialiser implements ApplicationRunner {
 		a3.addAdmin(adma3);
 		apotekaRepo.save(a3);
 
-		AdminSistema as1 = new AdminSistema("Petar", "Markovic", "peki2", "peki2", "isamrstim06+admsys@gmail.com", true, "123123123", l1, ZaposlenjeKorisnika.ADMIN_SISTEMA);
+		AdminSistema as1 = new AdminSistema("Petar", "Markovic", "peki2", "peki2", "isamrstim06+admsys@gmail.com", false, "123123123", l1, ZaposlenjeKorisnika.ADMIN_SISTEMA);
 		korisnici.save(as1);
 
 		Pacijent p1 =  new Pacijent("Ivan", "Mrsulja", "ivan", "ivan","isamrstim06+im@gmail.com",true,"069069069",ZaposlenjeKorisnika.PACIJENT, l4, StatusNaloga.AKTIVAN, 200, tk1);
@@ -134,31 +143,58 @@ public class DBInitialiser implements ApplicationRunner {
 		
 		Penal pe1 = new Penal(LocalDate.now(), p1);
 		Penal pe2 = new Penal(LocalDate.now(), p1);
-		Penal pe3 = new Penal(LocalDate.now(), p1);
+		//Penal pe3 = new Penal(LocalDate.now(), p1);
 		Penal pe4 = new Penal(LocalDate.now(), p2);
 		penaliRepo.save(pe1);
 		penaliRepo.save(pe2);
-		penaliRepo.save(pe3);
+		//penaliRepo.save(pe3);
 		penaliRepo.save(pe4);
 		
 		p1.addPenal(pe1);
 		p1.addPenal(pe2);
-		p1.addPenal(pe3);
+		//p1.addPenal(pe3);
 		p2.addPenal(pe4);
 		korisnici.save(p1);
 		korisnici.save(p2);
 		
+
+		Preparat pr1 = new Preparat("Alirex", TipLeka.ANTIHISTAMINIK, "Kontraindikacije.", "Lorem ipsum dolor sit amet.", 2, 200, "okrugao", "Galenika", RezimIzdavanja.BEZ_RECEPTA, 0.0, 0.0);
+		Preparat pr2 = new Preparat("Andol", TipLeka.ANESTETIK, "Kontraindikacije.", "Lorem ipsum dolor sit amet.", 3, 300, "okrugao", "Galenika", RezimIzdavanja.BEZ_RECEPTA, 3.0, 14.0);
+		Preparat pr3 = new Preparat("Block Max", TipLeka.ANESTETIK, "Kontraindikacije.", "Lorem ipsum dolor sit amet.", 3, 400, "okrugao", "Galenika", RezimIzdavanja.BEZ_RECEPTA, 2.0, 4.0);
+		preparatRepo.save(pr1);
+		preparatRepo.save(pr2);
+		pr3.addZamenskiPreparat(pr2);
+		preparatRepo.save(pr3);
+		
 		
 		Dobavljac d = new Dobavljac("Pera", "Peric", "dobavljac", "dobavljac", "isamrstim06+pera@gmail.com", true, "069655655", null, ZaposlenjeKorisnika.DOBAVLJAC);
-		Narudzbenica n = new Narudzbenica(LocalDate.parse("2020-04-07"), null);
+		Narudzbenica n = new Narudzbenica(LocalDate.parse("2020-04-04"), adma2, StatusNarudzbenice.CEKA_PONUDE);
+		Set<NaruceniProizvod> naruceniProizvodi1 = new HashSet<NaruceniProizvod>();
+		NaruceniProizvod np1 = new NaruceniProizvod(8, pr1, n);
+		NaruceniProizvod np2 = new NaruceniProizvod(10, pr2, n);
+		naruceniProizvodi1.add(np1);
+		naruceniProizvodi1.add(np2);
+		n.setNaruceniProizvodi(naruceniProizvodi1);
+		Narudzbenica n2 = new Narudzbenica(LocalDate.parse("2020-10-10"), adma2, StatusNarudzbenice.OBRADJENA);
+		Set<NaruceniProizvod> naruceniProizvodi2 = new HashSet<NaruceniProizvod>();
+		NaruceniProizvod np3 = new NaruceniProizvod(4, pr1, n2);
+		NaruceniProizvod np4 = new NaruceniProizvod(14, pr3, n2);
+		naruceniProizvodi1.add(np3);
+		naruceniProizvodi1.add(np4);
+		n2.setNaruceniProizvodi(naruceniProizvodi2);
+		naruceniProizvodRepo.save(np1);
+		naruceniProizvodRepo.save(np2);
+		naruceniProizvodRepo.save(np3);
+		naruceniProizvodRepo.save(np4);
 		korisnici.save(d);
 		narudzbenicaRepo.save(n);
+		narudzbenicaRepo.save(n2);
 		adminRepo.save(new Ponuda(StatusPonude.CEKA_NA_ODGOVOR, 400.23, LocalDate.parse("2021-04-24"), n, d));
 		adminRepo.save(new Ponuda(StatusPonude.PRIHVACENA, 500.23, LocalDate.parse("2021-04-07"), n, d));
 		adminRepo.save(new Ponuda(StatusPonude.ODBIJENA, 500.23, LocalDate.parse("2021-04-06"), n, d));
 		
-		Dermatolog d1=new Dermatolog("Dusan", "Antic", "dermatolog", "dermatolog","isamrstim06+d1@gmail.com",true,"telefon",l6,ZaposlenjeKorisnika.DERMATOLOG,5,24);		
-		Dermatolog d2=new Dermatolog("Pera", "Peric", "pera123", "pera123","isamrstim06+d2@gmail.com",true,"telefon",l7,ZaposlenjeKorisnika.DERMATOLOG,7,10);		
+		Dermatolog d1=new Dermatolog("Dusan", "Antic", "dermatolog", "dermatolog","isamrstim06+d1@gmail.com",true,"telefon",l6,ZaposlenjeKorisnika.DERMATOLOG,5.0,24.0);		
+		Dermatolog d2=new Dermatolog("Pera", "Peric", "pera123", "pera123","isamrstim06+d2@gmail.com",true,"telefon",l7,ZaposlenjeKorisnika.DERMATOLOG,7.0,10.0);		
 		korisnici.save(d1);
 		korisnici.save(d2);
 		
@@ -176,12 +212,19 @@ public class DBInitialiser implements ApplicationRunner {
 		korisnici.save(d1);
 		korisnici.save(d2);
 
-		Farmaceut f1=new Farmaceut("Marko", "Markovic", "farmaceut", "farmaceut","isamrstim06+f1@gmail.com",true,"telefon",l8,ZaposlenjeKorisnika.FARMACEUT,0,0, null);		
-		Farmaceut f2=new Farmaceut("Pera", "Petrovic", "pera123", "pera123","isamrstim06+f2@gmail.com",true,"telefon",l9,ZaposlenjeKorisnika.FARMACEUT,18,72, null);
-		Farmaceut f3=new Farmaceut("Imenko", "Prezimenic", "imenko", "imenko","isamrstim06+f3@gmail.com",true,"telefon",l10,ZaposlenjeKorisnika.FARMACEUT,2,3, null);	
+		Farmaceut f1=new Farmaceut("Marko", "Markovic", "farmaceut", "farmaceut","isamrstim06+f1@gmail.com",true,"telefon",l8,ZaposlenjeKorisnika.FARMACEUT,0.0,0.0, null);		
+		Farmaceut f2=new Farmaceut("Pera", "Petrovic", "pera123", "pera123","isamrstim06+f2@gmail.com",true,"telefon",l9,ZaposlenjeKorisnika.FARMACEUT,18.0,72.0, null);
+		Farmaceut f3=new Farmaceut("Imenko", "Prezimenic", "imenko", "imenko","isamrstim06+f3@gmail.com",true,"telefon",l10,ZaposlenjeKorisnika.FARMACEUT,2.0,3.0, null);	
 		korisnici.save(f1);
 		korisnici.save(f2);
 		korisnici.save(f3);
+
+		Zahtjev zahtev1 = new Zahtjev(TipZahtjeva.GODISNJI_ODMOR, StatusZahtjeva.CEKANJE, f1);
+		Zahtjev zahtev2 = new Zahtjev(TipZahtjeva.GODISNJI_ODMOR, StatusZahtjeva.CEKANJE, f2);
+		Zahtjev zahtev3 = new Zahtjev(TipZahtjeva.ODSUSTVO, StatusZahtjeva.CEKANJE, f3);
+		zahtevRepo.save(zahtev1);
+		zahtevRepo.save(zahtev2);
+		zahtevRepo.save(zahtev3);
 		
 		Zaposlenje z4 = new Zaposlenje(LocalTime.parse("09:00"), LocalTime.parse("17:00"), a1, f1);
 		Zaposlenje z5 = new Zaposlenje(LocalTime.parse("09:00"), LocalTime.parse("17:00"), a2, f2);
@@ -195,14 +238,6 @@ public class DBInitialiser implements ApplicationRunner {
 		korisnici.save(f1);
 		korisnici.save(f2);
 		korisnici.save(f3);
-		
-		Preparat pr1 = new Preparat("Alirex", TipLeka.ANTIHISTAMINIK, "Kontraindikacije.", "Lorem ipsum dolor sit amet.", 2, 200, "okrugao", "Galenika", RezimIzdavanja.BEZ_RECEPTA, 0.0, 0.0);
-		Preparat pr2 = new Preparat("Andol", TipLeka.ANESTETIK, "Kontraindikacije.", "Lorem ipsum dolor sit amet.", 3, 300, "okrugao", "Galenika", RezimIzdavanja.BEZ_RECEPTA, 3.0, 14.0);
-		Preparat pr3 = new Preparat("Block Max", TipLeka.ANESTETIK, "Kontraindikacije.", "Lorem ipsum dolor sit amet.", 3, 400, "okrugao", "Galenika", RezimIzdavanja.BEZ_RECEPTA, 2.0, 4.0);
-		preparatRepo.save(pr1);
-		preparatRepo.save(pr2);
-		pr3.addZamenskiPreparat(pr2);
-		preparatRepo.save(pr3);
 		
 		p1.getAlergije().add(pr1);
 		korisnici.save(p1);
@@ -241,16 +276,16 @@ public class DBInitialiser implements ApplicationRunner {
 		korisnici.save(p1);
 		
 
-		Pregled pre1 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2021-05-07"), LocalTime.parse("09:00"), 45, 5000, d1, p1, a1);
-		Pregled pre11 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2021-05-08"), LocalTime.parse("09:00"), 45, 5000, d1, p1, a1);
-		Pregled pre12 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2021-05-09"), LocalTime.parse("10:00"), 45, 5000, d1, p2, a1);
-		Pregled pre13 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2021-05-09"), LocalTime.parse("09:00"), 45, 5000, d1, p1, a1);
-		Pregled pre14 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2021-05-09"), LocalTime.parse("11:00"), 45, 5000, d1, p1, a1);
-		Pregled pre15 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2021-05-10"), LocalTime.parse("10:00"), 45, 5000, d1, p2, a1);
-		Pregled pre16 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2021-05-07"), LocalTime.parse("08:00"), 45, 5000, d1, p1, a1);
-		Pregled pre2 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.SAVJETOVANJE, LocalDate.parse("2021-04-08"), LocalTime.parse("13:00"), 45, 4000, f1, p1, a1);
+		Pregled pre1 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2020-05-07"), LocalTime.parse("09:00"), 45, 5000, d1, p1, a1);
+		Pregled pre11 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2020-05-08"), LocalTime.parse("09:00"), 45, 5000, d1, p1, a1);
+		Pregled pre12 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2020-05-09"), LocalTime.parse("10:00"), 45, 5000, d1, p2, a1);
+		Pregled pre13 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2020-05-09"), LocalTime.parse("09:00"), 45, 5000, d1, p1, a1);
+		Pregled pre14 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2020-05-09"), LocalTime.parse("11:00"), 45, 5000, d1, p1, a1);
+		Pregled pre15 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2020-05-10"), LocalTime.parse("10:00"), 45, 5000, d1, p2, a1);
+		Pregled pre16 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2020-05-07"), LocalTime.parse("08:00"), 45, 5000, d1, p1, a1);
+		Pregled pre2 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.SAVJETOVANJE, LocalDate.parse("2020-04-08"), LocalTime.parse("13:00"), 45, 4000, f1, p1, a1);
 
-		Pregled pre3 = new Pregled("Lorem ipsum solor sit amet.", StatusPregleda.ZAVRSEN, TipPregleda.PREGLED, LocalDate.parse("2020-04-09"), LocalTime.parse("10:00"), 45, 5500, d1, p1, a1);
+		Pregled pre3 = new Pregled("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.", StatusPregleda.ZAVRSEN, TipPregleda.PREGLED, LocalDate.parse("2020-04-09"), LocalTime.parse("10:00"), 45, 5500, d1, p1, a1);
 		Pregled pre4 = new Pregled("Lorem ipsum dolor sit amet.", StatusPregleda.ZAVRSEN, TipPregleda.SAVJETOVANJE, LocalDate.parse("2020-04-11"), LocalTime.parse("11:00"), 45, 5700, f2, p1, a2);
 		Pregled pre5 = new Pregled("", StatusPregleda.SLOBODAN, TipPregleda.PREGLED, LocalDate.now(), LocalTime.parse("09:00"), 45, 5000, d1, null, a1);
 		Pregled pre6 = new Pregled("", StatusPregleda.SLOBODAN, TipPregleda.PREGLED, LocalDate.parse("2021-04-23"), LocalTime.parse("13:00"), 45, 4000, d2, null, a2);
@@ -282,7 +317,7 @@ public class DBInitialiser implements ApplicationRunner {
 		p1.addApoteka(a1);
 		p2.addApoteka(a2);
 		
-		LocalDate ld = LocalDate.now();
+		LocalDate ld = LocalDate.parse("2018-12-27");
 		Cena cena = new Cena(a1, ld);
 		Set<DostupanProizvod> dostupni_proizvodi = new HashSet<DostupanProizvod>();
 		DostupanProizvod dp1 = new DostupanProizvod(4, 1000, pr1);
