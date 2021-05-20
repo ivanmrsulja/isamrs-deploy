@@ -10,6 +10,7 @@ services:
 
 before_install:
   - chmod +x mvnw
+  - sudo apt install nodejs
 
 addons:
   sonarcloud:
