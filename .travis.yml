@@ -19,7 +19,7 @@ addons:
 
 script:
   - ./mvnw clean install -DskipTests=false -B
-  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.projectKey=ivanmrsulja_isamrs-deploy
+  - ./mvnw sonar:sonar -Dsonar.projectKey=$PROJECT_KEY -Dsonar.organization=ivanmrsulja -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
 
 
 dist: trusty
