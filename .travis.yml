@@ -2,25 +2,14 @@ sudo: required
 language: java
 jdk: oraclejdk11
 
-node_js:
-  - "10"
-
 services:
   - postgresql
 
 before_install:
   - chmod +x mvnw
-  - sudo apt-get install nodejs
-
-addons:
-  sonarcloud:
-  organization: "ivanmrsulja"
-  token: $SONAR_TOKEN
 
 script:
   - ./mvnw clean install -DskipTests=false -B
-  - ./mvnw sonar:sonar -Dsonar.projectKey=$PROJECT_KEY -Dsonar.organization=ivanmrsulja -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
-
 
 dist: trusty
 
