@@ -25,6 +25,7 @@ import rest.domain.Farmaceut;
 import rest.domain.Lokacija;
 import rest.domain.NaruceniProizvod;
 import rest.domain.Narudzbenica;
+import rest.domain.Notifikacija;
 import rest.domain.Pacijent;
 import rest.domain.Penal;
 import rest.domain.Ponuda;
@@ -83,6 +84,8 @@ public class DBInitialiser implements ApplicationRunner {
 	private ZahtevRepository zahtevRepo;
 	@Autowired
 	private NaruceniProizvodRepository naruceniProizvodRepo;
+	@Autowired
+	private NotifikacijaRepository notifikacijaRepo;
 	
 	@Override
 	@Transactional
@@ -100,6 +103,7 @@ public class DBInitialiser implements ApplicationRunner {
 		Lokacija l8 = new Lokacija(45.245143, 19.812051, "Jovana Popovica 9, Novi Sad");
 		Lokacija l9 = new Lokacija(45.253836, 19.807212, "Vladike Cirica 27, Novi Sad");
 		Lokacija l10 = new Lokacija(45.253836, 19.807212, "Vladike Cirica 27, Novi Sad");
+		Lokacija l11 = new Lokacija(45.253836, 19.807212, "Vladike Cirica 27, Novi Sad");
 		lokacijaRepo.save(l1);
 		lokacijaRepo.save(l2);
 		lokacijaRepo.save(l3);
@@ -110,6 +114,7 @@ public class DBInitialiser implements ApplicationRunner {
 		lokacijaRepo.save(l8);
 		lokacijaRepo.save(l9);
 		lokacijaRepo.save(l10);
+		lokacijaRepo.save(l11);
 		
 		Apoteka a1 = new Apoteka("Benu", "Lorem ipsum dolor sit amet, consectetur adipiscing elit.", 3.0, 8.0, l2, 3000);
 		Apoteka a2 = new Apoteka("Lilly", "Lorem ipsum dolor sit amet, consectetur adipiscing elit.", 0.0, 0.0, l1, 2000);
@@ -123,7 +128,7 @@ public class DBInitialiser implements ApplicationRunner {
 		a1.addAdmin(adma1);
 		apotekaRepo.save(a1);
 		
-		AdminApoteke adma2 = new AdminApoteke("Marko", "Cupic", "marko", "marko", "isamrstim06+adm2@gmail.com", true, "123123123", l1, ZaposlenjeKorisnika.ADMIN_APOTEKE, a2);
+		AdminApoteke adma2 = new AdminApoteke("Marko", "Cupic", "marko", "marko", "isamrstim06+adm2@gmail.com", false, "123123123", l1, ZaposlenjeKorisnika.ADMIN_APOTEKE, a2);
 		korisnici.save(adma2);
 		a2.addAdmin(adma2);
 		apotekaRepo.save(a2);
@@ -195,8 +200,10 @@ public class DBInitialiser implements ApplicationRunner {
 		
 		Dermatolog d1=new Dermatolog("Dusan", "Antic", "dermatolog", "dermatolog","isamrstim06+d1@gmail.com",true,"telefon",l6,ZaposlenjeKorisnika.DERMATOLOG,5.0,24.0);		
 		Dermatolog d2=new Dermatolog("Pera", "Peric", "pera123", "pera123","isamrstim06+d2@gmail.com",true,"telefon",l7,ZaposlenjeKorisnika.DERMATOLOG,7.0,10.0);		
+		Dermatolog d3 = new Dermatolog("Mico", "Pelkin", "micoPelkin", "micoPelkin", "isamrstim06+d3@gmail.com", true, "telefon", l11, ZaposlenjeKorisnika.DERMATOLOG, 0, 0);
 		korisnici.save(d1);
 		korisnici.save(d2);
+		korisnici.save(d3);
 		
 
 		Zaposlenje z1 = new Zaposlenje(LocalTime.parse("09:00"), LocalTime.parse("17:00"), a1, d1);
@@ -213,18 +220,20 @@ public class DBInitialiser implements ApplicationRunner {
 		korisnici.save(d2);
 
 		Farmaceut f1=new Farmaceut("Marko", "Markovic", "farmaceut", "farmaceut","isamrstim06+f1@gmail.com",true,"telefon",l8,ZaposlenjeKorisnika.FARMACEUT,0.0,0.0, null);		
-		Farmaceut f2=new Farmaceut("Pera", "Petrovic", "pera123", "pera123","isamrstim06+f2@gmail.com",true,"telefon",l9,ZaposlenjeKorisnika.FARMACEUT,18.0,72.0, null);
+		Farmaceut f2=new Farmaceut("Pera", "Petrovic", "peraZdera", "peraZdera","isamrstim06+f2@gmail.com",true,"telefon",l9,ZaposlenjeKorisnika.FARMACEUT,18.0,72.0, null);
 		Farmaceut f3=new Farmaceut("Imenko", "Prezimenic", "imenko", "imenko","isamrstim06+f3@gmail.com",true,"telefon",l10,ZaposlenjeKorisnika.FARMACEUT,2.0,3.0, null);	
 		korisnici.save(f1);
 		korisnici.save(f2);
 		korisnici.save(f3);
 
-		Zahtjev zahtev1 = new Zahtjev(TipZahtjeva.GODISNJI_ODMOR, StatusZahtjeva.CEKANJE, f1);
-		Zahtjev zahtev2 = new Zahtjev(TipZahtjeva.GODISNJI_ODMOR, StatusZahtjeva.CEKANJE, f2);
-		Zahtjev zahtev3 = new Zahtjev(TipZahtjeva.ODSUSTVO, StatusZahtjeva.CEKANJE, f3);
+		Zahtjev zahtev1 = new Zahtjev(TipZahtjeva.GODISNJI_ODMOR, StatusZahtjeva.CEKANJE, f1, LocalDate.parse("2021-04-07"), LocalDate.parse("2021-06-12"));
+		Zahtjev zahtev2 = new Zahtjev(TipZahtjeva.GODISNJI_ODMOR, StatusZahtjeva.CEKANJE, f2, LocalDate.parse("2021-08-08"), LocalDate.parse("2021-08-12"));
+		Zahtjev zahtev3 = new Zahtjev(TipZahtjeva.ODSUSTVO, StatusZahtjeva.CEKANJE, f3, LocalDate.parse("2021-09-09"), LocalDate.parse("2021-10-05"));
+		Zahtjev zahtev4 = new Zahtjev(TipZahtjeva.ODSUSTVO, StatusZahtjeva.CEKANJE, d1, LocalDate.parse("2021-09-09"), LocalDate.parse("2021-10-05"));
 		zahtevRepo.save(zahtev1);
 		zahtevRepo.save(zahtev2);
 		zahtevRepo.save(zahtev3);
+		zahtevRepo.save(zahtev4);
 		
 		Zaposlenje z4 = new Zaposlenje(LocalTime.parse("09:00"), LocalTime.parse("17:00"), a1, f1);
 		Zaposlenje z5 = new Zaposlenje(LocalTime.parse("09:00"), LocalTime.parse("17:00"), a2, f2);
@@ -248,21 +257,27 @@ public class DBInitialiser implements ApplicationRunner {
 		
 		ERecept er1 = new ERecept(LocalDate.parse("2021-05-07"), p1, StatusERecepta.NOV, a1);
 		ERecept er2 = new ERecept(LocalDate.parse("2021-03-03"), p1, StatusERecepta.OBRADJEN, a2);
+		ERecept er3 = new ERecept(LocalDate.parse("2021-08-07"), p1, StatusERecepta.OBRADJEN, a1);
 		eaReceptiRepo.save(er1);
 		eaReceptiRepo.save(er2);
+		eaReceptiRepo.save(er3);
 		
 		StavkaRecepta sr1R1 = new StavkaRecepta(2, pr1);
 		StavkaRecepta sr2R1 = new StavkaRecepta(3, pr2);
 		StavkaRecepta sr1R2 = new StavkaRecepta(1, pr1);
+		StavkaRecepta sr1R3 = new StavkaRecepta(3, pr1);
 		stavkaReceptaRepo.save(sr1R1);
 		stavkaReceptaRepo.save(sr2R1);
 		stavkaReceptaRepo.save(sr1R2);
+		stavkaReceptaRepo.save(sr1R3);
 		
 		er1.getStavkaRecepata().add(sr1R1);
 		er1.getStavkaRecepata().add(sr2R1);
 		er2.getStavkaRecepata().add(sr1R2);
+		er3.getStavkaRecepata().add(sr1R3);
 		eaReceptiRepo.save(er1);
 		eaReceptiRepo.save(er2);
+		eaReceptiRepo.save(er3);
 		
 		Rezervacija rez1 = new Rezervacija(StatusRezervacije.REZERVISANO, LocalDate.parse("2021-05-29"), p1, pr1, a1, 1000);
 		Rezervacija rez2 = new Rezervacija(StatusRezervacije.REZERVISANO, LocalDate.now(), p2, pr1, a1, 750);
@@ -276,14 +291,15 @@ public class DBInitialiser implements ApplicationRunner {
 		korisnici.save(p1);
 		
 
-		Pregled pre1 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2020-05-07"), LocalTime.parse("09:00"), 45, 5000, d1, p1, a1);
+		Pregled pre1 = new Pregled("", StatusPregleda.SLOBODAN, TipPregleda.PREGLED, LocalDate.parse("2021-07-07"), LocalTime.parse("10:00"), 45, 5000, d1, null, a1);
 		Pregled pre11 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2020-05-08"), LocalTime.parse("09:00"), 45, 5000, d1, p1, a1);
 		Pregled pre12 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2020-05-09"), LocalTime.parse("10:00"), 45, 5000, d1, p2, a1);
 		Pregled pre13 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2020-05-09"), LocalTime.parse("09:00"), 45, 5000, d1, p1, a1);
 		Pregled pre14 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2020-05-09"), LocalTime.parse("11:00"), 45, 5000, d1, p1, a1);
 		Pregled pre15 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2020-05-10"), LocalTime.parse("10:00"), 45, 5000, d1, p2, a1);
 		Pregled pre16 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.PREGLED, LocalDate.parse("2020-05-07"), LocalTime.parse("08:00"), 45, 5000, d1, p1, a1);
-		Pregled pre2 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.SAVJETOVANJE, LocalDate.parse("2020-04-08"), LocalTime.parse("13:00"), 45, 4000, f1, p1, a1);
+		Pregled pre2 = new Pregled("", StatusPregleda.ZAKAZAN, TipPregleda.SAVJETOVANJE, LocalDate.parse("2021-07-08"), LocalTime.parse("13:00"), 45, 4000, f1, p1, a1);
+		Pregled pre10 = new Pregled("", StatusPregleda.ZAVRSEN, TipPregleda.SAVJETOVANJE, LocalDate.parse("2020-07-09"), LocalTime.parse("13:00"), 45, 4000, f1, null, a1);
 
 		Pregled pre3 = new Pregled("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.", StatusPregleda.ZAVRSEN, TipPregleda.PREGLED, LocalDate.parse("2020-04-09"), LocalTime.parse("10:00"), 45, 5500, d1, p1, a1);
 		Pregled pre4 = new Pregled("Lorem ipsum dolor sit amet.", StatusPregleda.ZAVRSEN, TipPregleda.SAVJETOVANJE, LocalDate.parse("2020-04-11"), LocalTime.parse("11:00"), 45, 5700, f2, p1, a2);
@@ -300,6 +316,7 @@ public class DBInitialiser implements ApplicationRunner {
 		pregledRepo.save(pre6);
 		pregledRepo.save(pre7);
 		pregledRepo.save(pre8);
+		pregledRepo.save(pre10);
 		pregledRepo.save(pre11);
 		pregledRepo.save(pre12);
 		pregledRepo.save(pre13);
@@ -307,7 +324,10 @@ public class DBInitialiser implements ApplicationRunner {
 		pregledRepo.save(pre15);
 		pregledRepo.save(pre16);
 
-		
+		Notifikacija not1 = new Notifikacija("Polivinil hlorid silikon elastik", LocalDate.now(), a1, f1);
+		Notifikacija not2 = new Notifikacija("Hidrogen", LocalDate.now(), a1, f2);
+		notifikacijaRepo.save(not1);
+		notifikacijaRepo.save(not2);
 		
 		AkcijaPromocija ap1 = new AkcijaPromocija("Lorem ipsum dolor sit amet.", adma1);
 		AkcijaPromocija ap2 = new AkcijaPromocija("Lorem ipsum dolor sit amet.", adma2);

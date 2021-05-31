@@ -10,7 +10,12 @@ Vue.component("definicija-cenovnika", {
     
 	<div align = center style="width: 75% sm;">
 
+    <br>
+    <br>
+
     <h2>Cenovnik apoteke</h2>
+
+    <br>
 
     <table class="table table-hover" style="width: 50%">
     <thead>
@@ -22,7 +27,7 @@ Vue.component("definicija-cenovnika", {
     <tbody>
     <tr v-for="dostupanProizvod in cenovnik.dostupniProizvodi">
     <td>{{dostupanProizvod.preparat}}</td>
-    <td><input type="text" v-model="dostupanProizvod.cena"/></td>
+    <td><input type="number" v-model="dostupanProizvod.cena"/></td>
     </tr>
     <tr>
     <td>Datum pocetka vazenja: </td><td><input type="date" v-model="cenovnik.pocetakVazenja" required /></td>
@@ -68,7 +73,7 @@ Vue.component("definicija-cenovnika", {
                     this.cenovnik = response.data;
                     this.cenovnik.pocetakVazenja = null;
                 });
-		  });
+		    });
         });
     }
 });
