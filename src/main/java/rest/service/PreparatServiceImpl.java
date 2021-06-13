@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
 
 import javax.transaction.Transactional;
 
@@ -23,6 +25,7 @@ import rest.domain.Rezervacija;
 import rest.domain.StatusRezervacije;
 import rest.dto.CenaDTO;
 import rest.dto.KorisnikDTO;
+import rest.dto.PreparatDTO;
 import rest.repository.ApotekeRepository;
 import rest.repository.CenaRepository;
 import rest.repository.DostupanProizvodRepository;
@@ -64,8 +67,11 @@ public class PreparatServiceImpl implements PreparatService{
 	
 	@Override
 	public Preparat getOne(int id) {
-		Preparat prep = preparatRepository.findById(id).get();
-		return prep;
+		Optional<Preparat> prep = preparatRepository.findById(id);
+		if (prep.isPresent()) {
+			return prep.get();
+		}
+		return null;
 	}
 
 	@Override
@@ -144,9 +150,26 @@ public class PreparatServiceImpl implements PreparatService{
 		}
 		
 		dp.setKolicina(dp.getKolicina() - 1);
-		Preparat p = preparatRepository.findById(idp).get();
-		Pacijent pa = pacijentRepository.findById(idpa).get();
-		Apoteka a = apotekeRepository.findById(ida).get();
+		Optional<Preparat> pOpt = preparatRepository.findById(idp);
+		Optional<Pacijent> paOpt = pacijentRepository.findById(idpa);
+		Optional<Apoteka> aOpt = apotekeRepository.findById(ida);
+		Preparat p = null;
+		Pacijent pa = null;
+		Apoteka a = null;
+		
+		if (pOpt.isPresent()) {
+			p = pOpt.get();
+		}
+		if (paOpt.isPresent()) {
+			pa = paOpt.get();
+		}
+		if(aOpt.isPresent()) {
+			a = aOpt.get();
+		}
+		
+		if (p == null || pa == null || a == null) {
+			throw new Exception("Trazeni entitet ne postoji u bazi.");
+		}
 		
 		double cena = dp.getCena() * pa.getTipKorisnika().getPopust();
 		Rezervacija rez = new Rezervacija(StatusRezervacije.REZERVISANO, datum, pa, p, a, cena);
@@ -156,5 +179,32 @@ public class PreparatServiceImpl implements PreparatService{
 		pacijentRepository.save(pa);
 		dostupanRepo.save(dp);
 		return rez;
+	}
+
+	@Override
+	public void addlek(PreparatDTO cure) {
+		Preparat p = new Preparat();
+		p.setNaziv(cure.getNaziv());
+		p.setKontraindikacije(cure.getKontraindikacije());
+		p.setSastav(cure.getSastav());
+		p.setPreporuceniUnos(cure.getPreporuceniUnos());
+		p.setOblik(cure.getOblik());
+		p.setProizvodjac(cure.getProizvodjac());
+		p.setIzdavanje(cure.getRezim());
+		p.setOcena(cure.getOcena());
+		p.setTip(cure.getTip());
+		p.setPoeni(cure.getPoeni());
+		HashSet<Preparat> zamene = new HashSet<Preparat>();
+		for (int zi : cure.getZamenskiPreparati()) {
+			Optional<Preparat> piOptional = preparatRepository.findById(zi);
+			if (!piOptional.isPresent())
+				return;
+
+			Preparat pi = piOptional.get();
+			zamene.add(pi);
+		}
+		p.setZamjenskiPreparati(zamene);
+		preparatRepository.save(p);
+		
 	}
 }

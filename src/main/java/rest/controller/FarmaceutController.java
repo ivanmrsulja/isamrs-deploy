@@ -3,6 +3,7 @@ package rest.controller;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 
 import javax.servlet.http.HttpSession;
 
@@ -27,9 +28,12 @@ import rest.aspect.AsAdminApoteke;
 import rest.aspect.AsPacijent;
 import rest.domain.Farmaceut;
 import rest.domain.Pregled;
+import rest.domain.Rezervacija;
 import rest.dto.FarmaceutDTO;
 import rest.dto.KorisnikDTO;
 import rest.dto.PregledDTO;
+import rest.dto.RezervacijaDTO;
+import rest.repository.RezervacijaRepository;
 import rest.service.ApotekaService;
 import rest.service.FarmaceutService;
 import rest.service.PregledService;
@@ -42,12 +46,15 @@ public class FarmaceutController {
 	private FarmaceutService farmaceutService;
 	private ApotekaService apotekaService;
 	private PregledService pregledService;
+
+	private RezervacijaRepository rezervacijaRepository;
 	
 	@Autowired
-	public FarmaceutController(FarmaceutService farmaceut, ApotekaService as, PregledService pregledService) {
+	public FarmaceutController(FarmaceutService farmaceut, ApotekaService as, PregledService pregledService, RezervacijaRepository rr) {
 		this.farmaceutService = farmaceut;
 		this.apotekaService = as;
 		this.pregledService = pregledService;
+		this.rezervacijaRepository=rr;
 	}
 	
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -168,5 +175,24 @@ public class FarmaceutController {
 		farmaceutService.deletePharmacist(idFarmaceuta);
 
 		return "OK";
+	}
+	
+	@GetMapping(value ="/rezervacijaLeka/{idKorisnika}/{idRezervacije}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public RezervacijaDTO getRezervaciju(@PathVariable("idKorisnika") int idKor,@PathVariable("idRezervacije") int idRez) {
+		
+		Farmaceut farmaceut = farmaceutService.findOne(idKor);
+	    Optional<Rezervacija> rezervacijaOptional = rezervacijaRepository.findById(idRez);
+	    
+	    Rezervacija rezervacija = null;
+	    if(rezervacijaOptional.isPresent()) {
+	    	rezervacija = rezervacijaOptional.get();
+	    }
+	    
+	    if(rezervacija != null && rezervacija.getApoteka().getNaziv().equals(farmaceut.getZaposlenje().getApoteka().getNaziv()))
+	    {	    			  
+	    	return new RezervacijaDTO(rezervacija);
+	    }
+	    
+	    return null;
 	}
 }

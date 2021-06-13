@@ -2,16 +2,15 @@ package rest.service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.Collection;
 
 import org.springframework.data.domain.Page;
 
 import rest.domain.Apoteka;
 import rest.domain.Farmaceut;
-import rest.domain.Korisnik;
 import rest.domain.Pregled;
 import rest.dto.ApotekaDTO;
+import rest.dto.LekProdajaDTO;
 import rest.dto.PregledDTO;
 import rest.util.ApotekaSearchParams;
 
@@ -38,5 +37,13 @@ public interface ApotekaService {
 	Collection<Farmaceut> farmaceutiZaTerminSavetovanja(LocalDate datum, LocalTime vrijeme, int id, String criteria) throws Exception;
 	
 	Pregled zakaziSavetovanje(PregledDTO podaci, int idApoteke, int idFarmaceuta, int idPacijenta) throws Exception;
+	
+	Collection<LekProdajaDTO> lekovi(String cures[]);
+	
+	Collection<LekProdajaDTO> sortLekovi(String cures[], String crit);
+	
+	void kupiLekove(String cures[], int id, int pacId);
+	
+	Collection<LekProdajaDTO> sortLekoviasc(String cures[], String crit, String asc);
 
 }

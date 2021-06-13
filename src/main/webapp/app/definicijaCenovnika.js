@@ -46,14 +46,14 @@ Vue.component("definicija-cenovnika", {
             now_date = new Date();
             comparison_date = new Date(this.cenovnik.pocetakVazenja);
             if (comparison_date < now_date){
-                alert("Pogresna vrednost datuma.");
+                toast("Pogresna vrednost datuma.");
                 return;
             }
             axios
             .post("api/admin/registerCenovnik/" + this.apoteka.id, this.cenovnik)
             .then(response => {
                 if (response.data == "OK"){
-                    alert("Uspesno azuriranje cenovnika");
+                    toast("Uspesno azuriranje cenovnika");
                 }
             });
         },
@@ -72,6 +72,10 @@ Vue.component("definicija-cenovnika", {
                 .then(response => {
                     this.cenovnik = response.data;
                     this.cenovnik.pocetakVazenja = null;
+                    if (this.cenovnik.dostupniProizvodi.length == 0) {
+                        toast("Apoteka jos uvek nema cenovnik. Prvo odaberite preparate za apoteku.");
+                        this.$router.push({name: "PreparatiApoteke"});
+                    }
                 });
 		    });
         });

@@ -86,6 +86,10 @@ public class DBInitialiser implements ApplicationRunner {
 	private NaruceniProizvodRepository naruceniProizvodRepo;
 	@Autowired
 	private NotifikacijaRepository notifikacijaRepo;
+	@Autowired
+	private CenaRepository ceneRepository;
+	@Autowired
+	private DostupanProizvodRepository dostupniProizovdiRepo;
 	
 	@Override
 	@Transactional
@@ -173,27 +177,39 @@ public class DBInitialiser implements ApplicationRunner {
 		
 		
 		Dobavljac d = new Dobavljac("Pera", "Peric", "dobavljac", "dobavljac", "isamrstim06+pera@gmail.com", true, "069655655", null, ZaposlenjeKorisnika.DOBAVLJAC);
-		Narudzbenica n = new Narudzbenica(LocalDate.parse("2020-04-04"), adma2, StatusNarudzbenice.CEKA_PONUDE);
+		Dobavljac de1 = new Dobavljac("Pera", "Peric", "dobavljacica", "dobavljac", "isamrstim06+pera@gmail.com", true, "069655655", null, ZaposlenjeKorisnika.DOBAVLJAC);
+		Narudzbenica n = new Narudzbenica(LocalDate.parse("2022-04-04"), adma2, StatusNarudzbenice.CEKA_PONUDE);
 		Set<NaruceniProizvod> naruceniProizvodi1 = new HashSet<NaruceniProizvod>();
 		NaruceniProizvod np1 = new NaruceniProizvod(8, pr1, n);
 		NaruceniProizvod np2 = new NaruceniProizvod(10, pr2, n);
 		naruceniProizvodi1.add(np1);
 		naruceniProizvodi1.add(np2);
 		n.setNaruceniProizvodi(naruceniProizvodi1);
-		Narudzbenica n2 = new Narudzbenica(LocalDate.parse("2020-10-10"), adma2, StatusNarudzbenice.OBRADJENA);
+		Narudzbenica n2 = new Narudzbenica(LocalDate.parse("2021-08-10"), adma2, StatusNarudzbenice.OBRADJENA);
 		Set<NaruceniProizvod> naruceniProizvodi2 = new HashSet<NaruceniProizvod>();
 		NaruceniProizvod np3 = new NaruceniProizvod(4, pr1, n2);
 		NaruceniProizvod np4 = new NaruceniProizvod(14, pr3, n2);
 		naruceniProizvodi1.add(np3);
 		naruceniProizvodi1.add(np4);
 		n2.setNaruceniProizvodi(naruceniProizvodi2);
+		Narudzbenica n3 = new Narudzbenica(LocalDate.parse("2021-10-10"), adma2, StatusNarudzbenice.CEKA_PONUDE);
+		Set<NaruceniProizvod> naruceniProizvodi3 = new HashSet<NaruceniProizvod>();
+		NaruceniProizvod np6 = new NaruceniProizvod(4, pr1, n3);
+		NaruceniProizvod np5 = new NaruceniProizvod(14, pr3, n3);
+		naruceniProizvodi1.add(np6);
+		naruceniProizvodi1.add(np5);
+		n2.setNaruceniProizvodi(naruceniProizvodi3);
 		naruceniProizvodRepo.save(np1);
 		naruceniProizvodRepo.save(np2);
 		naruceniProizvodRepo.save(np3);
 		naruceniProizvodRepo.save(np4);
+		naruceniProizvodRepo.save(np5);
+		naruceniProizvodRepo.save(np6);
 		korisnici.save(d);
+		korisnici.save(de1);
 		narudzbenicaRepo.save(n);
 		narudzbenicaRepo.save(n2);
+		narudzbenicaRepo.save(n3);
 		adminRepo.save(new Ponuda(StatusPonude.CEKA_NA_ODGOVOR, 400.23, LocalDate.parse("2021-04-24"), n, d));
 		adminRepo.save(new Ponuda(StatusPonude.PRIHVACENA, 500.23, LocalDate.parse("2021-04-07"), n, d));
 		adminRepo.save(new Ponuda(StatusPonude.ODBIJENA, 500.23, LocalDate.parse("2021-04-06"), n, d));
@@ -219,7 +235,7 @@ public class DBInitialiser implements ApplicationRunner {
 		korisnici.save(d1);
 		korisnici.save(d2);
 
-		Farmaceut f1=new Farmaceut("Marko", "Markovic", "farmaceut", "farmaceut","isamrstim06+f1@gmail.com",true,"telefon",l8,ZaposlenjeKorisnika.FARMACEUT,0.0,0.0, null);		
+		Farmaceut f1=new Farmaceut("Marko", "Markovic", "farmaceut", "farmaceut","isamrstim06+f1@gmail.com",true,"telefon",l8,ZaposlenjeKorisnika.FARMACEUT,0.0,0.0, z1);		
 		Farmaceut f2=new Farmaceut("Pera", "Petrovic", "peraZdera", "peraZdera","isamrstim06+f2@gmail.com",true,"telefon",l9,ZaposlenjeKorisnika.FARMACEUT,18.0,72.0, null);
 		Farmaceut f3=new Farmaceut("Imenko", "Prezimenic", "imenko", "imenko","isamrstim06+f3@gmail.com",true,"telefon",l10,ZaposlenjeKorisnika.FARMACEUT,2.0,3.0, null);	
 		korisnici.save(f1);
@@ -338,17 +354,42 @@ public class DBInitialiser implements ApplicationRunner {
 		p2.addApoteka(a2);
 		
 		LocalDate ld = LocalDate.parse("2018-12-27");
-		Cena cena = new Cena(a1, ld);
-		Set<DostupanProizvod> dostupni_proizvodi = new HashSet<DostupanProizvod>();
-		DostupanProizvod dp1 = new DostupanProizvod(4, 1000, pr1);
-		DostupanProizvod dp2 = new DostupanProizvod(7, 600, pr2);
-		dostupni_proizvodi.add(dp1);
-		dostupni_proizvodi.add(dp2);
-		cena.setDostupniProizvodi(dostupni_proizvodi);
-		a1.addCena(cena);
-		
+		LocalDate ld1 = LocalDate.parse("2022-12-27");
+		Cena cen1 = new Cena(a1, ld);
+		cen1.setKrajVazenja(ld1);
+		ceneRepository.save(cen1);
+		Set<DostupanProizvod> dp1 = new HashSet<DostupanProizvod>();
+		dp1.add(new DostupanProizvod(5, 300.00, pr1));
+		dostupniProizovdiRepo.saveAll(dp1);
+		cen1.setDostupniProizvodi(dp1);
+		ceneRepository.save(cen1);
+		a1.addCena(cen1);
 		apotekaRepo.save(a1);
+		
+		Cena cen2 = new Cena(a2, ld);
+		cen2.setKrajVazenja(ld1);
+		ceneRepository.save(cen2);
+		Set<DostupanProizvod> dp2 = new HashSet<DostupanProizvod>();
+		dp2.add(new DostupanProizvod(4, 340.00, pr1));
+		dp2.add(new DostupanProizvod(8, 420.00, pr2));
+		dostupniProizovdiRepo.saveAll(dp2);
+		cen2.setDostupniProizvodi(dp2);
+		ceneRepository.save(cen2);
+		a2.addCena(cen2);
 		apotekaRepo.save(a2);
+		
+		Cena cen3 = new Cena(a3,ld);
+		cen3.setKrajVazenja(ld1);
+		ceneRepository.save(cen3);
+		Set<DostupanProizvod> dp3 = new HashSet<DostupanProizvod>();
+		dp3.add(new DostupanProizvod(3, 540.00, pr1));
+		dp3.add(new DostupanProizvod(6, 490.00, pr2));
+		dp3.add(new DostupanProizvod(7, 630.00, pr3));
+		dostupniProizovdiRepo.saveAll(dp3);
+		cen3.setDostupniProizvodi(dp3);
+		ceneRepository.save(cen3);
+		a3.addCena(cen3);
+		apotekaRepo.save(a3);
 	}
 
 }

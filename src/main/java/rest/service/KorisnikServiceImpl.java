@@ -2,6 +2,7 @@ package rest.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 
 import javax.transaction.Transactional;
 
@@ -78,12 +79,21 @@ public class KorisnikServiceImpl implements KorisnikService {
 
 	@Override
 	public Korisnik findOne(int id) {
-		Korisnik user = korisnikRepository.findById(id).get();
-		return user;
+		Optional<Korisnik> user = korisnikRepository.findById(id);
+		if (user.isPresent()) {
+			return user.get();
+		}
+		return null;
 	}
-
+	
+	
+	@Transactional
 	@Override
 	public Korisnik create(Korisnik user) throws Exception {
+		Korisnik k = korisnikRepository.getUserByUsername(user.getUsername());
+		if(k != null) {
+			return null;
+		}
 		lokacijaRepository.save(user.getLokacija());
 		Korisnik savedUser = korisnikRepository.save(user);
 		return savedUser;
@@ -92,12 +102,18 @@ public class KorisnikServiceImpl implements KorisnikService {
 	@Override
 	public AdminApoteke createAdminPharm(PharmacyAdminDTO user) throws Exception {
 		lokacijaRepository.save(user.getLokacija());
-		Apoteka a = apotekeRepository.findById(Integer.parseInt(user.getApoteka())).get();
-		AdminApoteke k = new AdminApoteke(user.getIme(), user.getPrezime(), user.getUsername(),user.getNoviPassw(), user.getEmail(), true, user.getTelefon(), user.getLokacija(),ZaposlenjeKorisnika.ADMIN_APOTEKE, a);
-		//k.setApoteka(a);
-		//korisnikRepository.save(k);
-		a.addAdmin(k);
-		apotekeRepository.save(a);
+		Optional<Apoteka> aOpt = apotekeRepository.findById(Integer.parseInt(user.getApoteka()));
+		AdminApoteke k = null;
+		Apoteka a = null;
+		if(korisnikRepository.getUserByUsername(user.getUsername()) != null) {
+			return null;
+		}
+		if( aOpt.isPresent() ) {
+			a = aOpt.get();
+			k = new AdminApoteke(user.getIme(), user.getPrezime(), user.getUsername(),user.getNoviPassw(), user.getEmail(), true, user.getTelefon(), user.getLokacija(),ZaposlenjeKorisnika.ADMIN_APOTEKE, a);
+			a.addAdmin(k);
+			apotekeRepository.save(a);
+		}
 		return k;
 	}
 
@@ -193,19 +209,29 @@ public class KorisnikServiceImpl implements KorisnikService {
 
 	@Override
 	public PacijentDTO findPacijentById(int id) {
-		Pacijent p = pacijentRepository.findById(id).get();
-		return new PacijentDTO(p);
+		Optional<Pacijent> p = pacijentRepository.findById(id);
+		if(p.isPresent()) {
+			return new PacijentDTO(p.get());
+		}
+		return null;
 	}
 
 	@Override
 	public AdminApotekeDTO findAdminApotekeById(int id) {
-		AdminApoteke a = adminApotekeRepository.findById(id).get();
-		return new AdminApotekeDTO(a);
+		Optional<AdminApoteke> a = adminApotekeRepository.findById(id);
+		if(a.isPresent()) {
+			return new AdminApotekeDTO(a.get());
+		}
+		return null;
 	}
 
 	@Override
 	public TipKorisnika pocetniTip() {
-		return tipRepo.findById(1).get();
+		Optional<TipKorisnika> t = tipRepo.findById(1);
+		if (t.isPresent()) {
+			return t.get();
+		}
+		return null;
 	}
 
 	@Override
@@ -215,7 +241,7 @@ public class KorisnikServiceImpl implements KorisnikService {
         mail.setTo(p.getEmail());
         mail.setFrom(env.getProperty("spring.mail.username"));
         mail.setSubject("Hvala sto ste se prijavili na nasu aplikaciju!");
-        mail.setText("Pozdrav " + p.getIme() + " " + p.getPrezime() + ",\n\nhvala što koristite nasu aplikaciju, kliknite na link ispod kako biste verifikovali nalog\nLorem ipsum dolor sit amet.");
+        mail.setText("Pozdrav " + p.getIme() + " " + p.getPrezime() + ",\n\nhvala što koristite nasu aplikaciju, kliknite na link ispod kako biste verifikovali nalog\nhttp://localhost:8080/#/verifikacija/"+p.getId());
         javaMailSender.send(mail);
 	}
 
@@ -224,6 +250,11 @@ public class KorisnikServiceImpl implements KorisnikService {
 		Korisnik userToUpdate = findOne(user.getId());
 		if (userToUpdate == null) {
 			throw new Exception("Trazeni entitet nije pronadjen.");
+		}
+		if(korisnikRepository.getUserByUsername(updateInfo.getUsername())!= null) {
+			if(!korisnikRepository.getUserByUsername(updateInfo.getUsername()).getZaposlenjeKorisnika().equals(ZaposlenjeKorisnika.DOBAVLJAC)) {
+				return null;
+			}
 		}
 		userToUpdate.setLoggedBefore(true);
 		userToUpdate.setPassword(updateInfo.getNoviPassw());

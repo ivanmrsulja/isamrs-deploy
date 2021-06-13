@@ -23,12 +23,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import rest.aspect.AsAdminApoteke;
+import rest.aspect.AsAdminSistema;
+import rest.aspect.AsDobavljac;
 import rest.domain.Narudzbenica;
 import rest.domain.Ponuda;
 import rest.dto.KorisnikDTO;
 import rest.dto.PonudaDTO;
 import rest.dto.PregledDTO;
 import rest.dto.PreparatDTO;
+import rest.dto.TipKorisnikaDTO;
+import rest.dto.ZalbaDTO;
 import rest.dto.CenovnikDTO;
 import rest.dto.DermatologDTO;
 import rest.dto.DostupanProizvodDTO;
@@ -38,6 +42,7 @@ import rest.dto.NotifikacijaDTO;
 import rest.repository.NarudzbenicaRepozitory;
 import rest.repository.PonudaRepository;
 import rest.service.AdminService;
+import rest.service.PacijentService;
 
 
 @RestController
@@ -47,10 +52,12 @@ public class AdminController {
 	private AdminService adminService;
 	private NarudzbenicaRepozitory narudzbenicaRepository;
 	private PonudaRepository ponudaRepository;
+	private PacijentService pacijentService;
 	
 	@Autowired
-	public AdminController(AdminService as, NarudzbenicaRepozitory nr, PonudaRepository pr) {
+	public AdminController(PacijentService pas,AdminService as, NarudzbenicaRepozitory nr, PonudaRepository pr) {
 		this.adminService = as;
+		this.pacijentService = pas;
 		this.narudzbenicaRepository = nr;
 		this.ponudaRepository = pr;
 	}
@@ -63,9 +70,37 @@ public class AdminController {
 	@AsAdminApoteke
 	@GetMapping(value = "/searchPharmacy/{id}/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ArrayList<DostupanProizvodDTO> searchPharmacyProducts(@PathVariable("id") int pharmacyId, @PathVariable("name") String name) {
-		ArrayList<DostupanProizvodDTO> availablePharmacyProductsDTO = adminService.searhProductsOfPharmacy(pharmacyId, name);
+		return adminService.searhProductsOfPharmacy(pharmacyId, name);
+	}
+	
+	@AsDobavljac
+	@GetMapping(value = "/oneNar/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public NarudzbenicaDTO oneNar(@PathVariable("id") int id){
+		NarudzbenicaDTO abc = adminService.getNarudzbenicaById(id);
 
-		return availablePharmacyProductsDTO;
+		return abc;
+	}
+	
+	@AsAdminSistema
+	@GetMapping(value = "/Zalbe/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ArrayList<ZalbaDTO> getZalbeForAdmin(@PathVariable("id") int id){
+		Collection<ZalbaDTO> zdtos = pacijentService.getZalbeForAdmin(id);
+
+		return (ArrayList<ZalbaDTO>) zdtos;
+	}
+	
+	@AsAdminSistema
+	@PutMapping(value = "/ZalbeUpdate/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public String updateZalba(@PathVariable("id") int id) {
+		adminService.updateZalba(id);
+		return "OK";
+	}
+	
+	@GetMapping(value = "/availableNar/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ArrayList<NarudzbenicaDTO> availableNar(@PathVariable("id") int id){
+		Collection<NarudzbenicaDTO> abc = adminService.getAvailableNarudzbenice(id);
+
+		return (ArrayList<NarudzbenicaDTO>) abc;
 	}
 
 	@AsAdminApoteke
@@ -82,6 +117,25 @@ public class AdminController {
 		ArrayList<PreparatDTO> productsDTO = adminService.getProductsOutsidePharmacy(pharmacyId);
 
 		return productsDTO;
+	}
+	
+	@AsDobavljac
+	@PostMapping(value = "/sendOffer", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public String sendOffer(@RequestBody PonudaDTO tip) throws Exception {
+		//System.out.println(tip.getNaziv() + tip.getBodovi() + tip.getPopust());
+		adminService.createOffer(tip);
+		return "OK";
+	}
+	
+	@AsAdminSistema
+	@PostMapping(value = "/registerType", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public String register(@RequestBody TipKorisnikaDTO tip) throws Exception {
+		System.out.println(tip.getNaziv() + tip.getBodovi() + tip.getPopust());
+		TipKorisnikaDTO tkdto =  adminService.createType(tip);
+		if(tkdto == null) {
+			return "Not OK";
+		}
+		return "OK";
 	}
 
 	@AsAdminApoteke
@@ -122,6 +176,14 @@ public class AdminController {
 		ArrayList<IzvestajValueDTO> incomes = adminService.getYearlyIncome(year, pharmacyId);
 
 		return incomes;
+	}
+	
+	@AsAdminSistema
+	@GetMapping(value= "/getZalba/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ZalbaDTO getZalba(@PathVariable("id") int id) {
+		ZalbaDTO users = pacijentService.getOneZalba(id);
+		
+		return users;
 	}
 	
 	@AsAdminApoteke
@@ -260,13 +322,18 @@ public class AdminController {
 	@AsAdminApoteke
 	@PostMapping(value = "/registerExamination/{dermatologistId}/{pharmacyId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public String registerExamination(@RequestBody PregledDTO examinationDTO, @PathVariable("dermatologistId") int dermatologistId, @PathVariable("pharmacyId") int pharmacyId) {
-		if (adminService.registerExamination(dermatologistId, pharmacyId, examinationDTO) == null) {
+		try {
+			if (adminService.registerExamination(dermatologistId, pharmacyId, examinationDTO) == null) {
+				return "ERR";
+			}
+		} catch (Exception e) {
 			return "ERR";
 		}
 		
 		return "OK";
 	}
 	
+	@AsDobavljac
 	@GetMapping(value = "cures/{status}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Collection<PonudaDTO>> getStatusPonuda(HttpServletRequest request, @PathVariable("status") String status) {
 		KorisnikDTO u = (KorisnikDTO) request.getSession().getAttribute("user");
@@ -275,7 +342,13 @@ public class AdminController {
 		for(Ponuda p : offers) {
 			if(p.getDobavljac().getUsername().equals(u.getUsername())) {
 				if(p.getStatus().toString().equals(status) || status.equals("SVI")) {
-					ponude.add(new PonudaDTO(p));
+					Optional<Narudzbenica> naruOpt = narudzbenicaRepository.findById(p.getNarudzbenica().getId());
+					if (naruOpt.isPresent()) {
+						Narudzbenica naru = naruOpt.get();
+						PonudaDTO pondt = new PonudaDTO(p);
+						pondt.setRokIsporukeNarudzbenice(naru.getRok());
+						ponude.add(pondt);
+					}
 				}
 
 			}
@@ -300,6 +373,7 @@ public class AdminController {
 		return offersDTO;
 	}
 	
+	@AsDobavljac
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Collection<PonudaDTO>> getOffers(HttpServletRequest request) {
 		KorisnikDTO u = (KorisnikDTO) request.getSession().getAttribute("user");
@@ -307,7 +381,13 @@ public class AdminController {
 		ArrayList<PonudaDTO> ponude = new ArrayList<PonudaDTO>();
 		for(Ponuda p : offers) {
 			if(p.getDobavljac().getUsername().equals(u.getUsername())) {
-				ponude.add(new PonudaDTO(p));
+				Optional<Narudzbenica> naruOpt = narudzbenicaRepository.findById(p.getNarudzbenica().getId());
+				if(naruOpt.isPresent()) {
+					Narudzbenica naru = naruOpt.get();
+					PonudaDTO pondt = new PonudaDTO(p);
+					pondt.setRokIsporukeNarudzbenice(naru.getRok());
+					ponude.add(pondt);
+				}
 			}
 		}
 		return new ResponseEntity<Collection<PonudaDTO>>(ponude, HttpStatus.OK);
@@ -337,6 +417,14 @@ public class AdminController {
 		CenovnikDTO cenovnikDTO = adminService.findPricelistForPharmacy(pharmacyId);
 
 		return cenovnikDTO;
+	}
+	
+	@AsDobavljac
+	@PutMapping(value = "/updateOffer/{id}/{date}/{price}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public String updateOffer(@PathVariable("id") int idOffer, @PathVariable("date") String date, @PathVariable("price") double price) {
+		//CenovnikDTO cenovnikDTO = adminService.findPricelistForPharmacy(idOffer); //DSAJHDJLKSAHDJKLSHDBJSAHDJKSAHDJHSADJKASHJDKASDJKASHJKDHSAJKDHASDSJKHSJDKAHSKDJAKSHJSJKHDJKASDHASJKDH
+		adminService.updateOffer(idOffer, date, price);
+		return "OK";
 	}
 	
 	@AsAdminApoteke

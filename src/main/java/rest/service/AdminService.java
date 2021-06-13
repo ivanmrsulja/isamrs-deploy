@@ -19,6 +19,7 @@ import rest.dto.NotifikacijaDTO;
 import rest.dto.PonudaDTO;
 import rest.dto.PregledDTO;
 import rest.dto.PreparatDTO;
+import rest.dto.TipKorisnikaDTO;
 
 
 public interface AdminService {
@@ -86,7 +87,7 @@ public interface AdminService {
 
 	public void deleteExamination(int examinationId);
 	
-	public Pregled registerExamination(int dermatologistId, int pharmacyId, PregledDTO examinationDTO);
+	public Pregled registerExamination(int dermatologistId, int pharmacyId, PregledDTO examinationDTO) throws Exception;
 
 	public void deleteOutdatedPromotion();
 
@@ -97,4 +98,15 @@ public interface AdminService {
 	public Collection<Pregled> scheduledAppointmentsForDermatologist(int pharmacyId, int dermatologistId);
 
 	public void removeDermatologist(int pharmacyId, int dermatologistId);
+	public TipKorisnikaDTO createType(TipKorisnikaDTO t);
+	
+	public Collection<NarudzbenicaDTO> getAvailableNarudzbenice(int id);
+	
+	public NarudzbenicaDTO getNarudzbenicaById(int id);
+	
+	public void createOffer(PonudaDTO p);
+	
+	public void updateZalba(int id);
+	
+	public void updateOffer(int id, String date, double price);
 }

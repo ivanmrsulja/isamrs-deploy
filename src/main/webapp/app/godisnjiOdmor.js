@@ -16,7 +16,7 @@ Vue.component("zakazivanje-godisnjegOdmora", {
 				
 		axios.post("/api/zahtev/zahtjev", zahtjev).then(data => {
 			if(data.data == "OK") {
-				alert("Uspesno ste podneli zahtev!");
+				toast("Uspesno ste podneli zahtev!");
 			}
 		});
 	},
@@ -36,9 +36,9 @@ Vue.component("zakazivanje-godisnjegOdmora", {
 					 <input name="odusustvo" type="radio"> Odusustvo<br>
 					
 					<br>
-					<tr>Datum: <input type="date" name="odDatuma"/></tr>
+					<tr>Od datuma: <input type="date" name="odDatuma"/></tr>
 					<br>
-					<tr>Datum: <input type="date" name="doDatuma"/></tr>
+					<tr>Do datuma: <input type="date" name="doDatuma"/></tr>
 				</th>
 			</thead>
 			</table>

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.text.DateFormatSymbols;
 
 import javax.transaction.Transactional;
@@ -21,6 +22,7 @@ import rest.domain.Cena;
 import rest.domain.Dermatolog;
 import rest.domain.Dobavljac;
 import rest.domain.DostupanProizvod;
+import rest.domain.Korisnik;
 import rest.domain.NaruceniProizvod;
 import rest.domain.Narudzbenica;
 import rest.domain.Notifikacija;
@@ -31,8 +33,10 @@ import rest.domain.Preparat;
 import rest.domain.StatusNarudzbenice;
 import rest.domain.StatusPonude;
 import rest.domain.StatusPregleda;
+import rest.domain.TipKorisnika;
 import rest.domain.TipPregleda;
 import rest.domain.Zahtjev;
+import rest.domain.Zalba;
 import rest.domain.Zaposlenje;
 import rest.dto.ApotekaDTO;
 import rest.dto.CenovnikDTO;
@@ -45,6 +49,7 @@ import rest.dto.NotifikacijaDTO;
 import rest.dto.PonudaDTO;
 import rest.dto.PregledDTO;
 import rest.dto.PreparatDTO;
+import rest.dto.TipKorisnikaDTO;
 import rest.repository.AdminApotekeRepository;
 import rest.repository.ApotekeRepository;
 import rest.repository.CenaRepository;
@@ -60,7 +65,9 @@ import rest.repository.PonudaRepository;
 import rest.repository.PregledRepository;
 import rest.repository.PreparatRepository;
 import rest.repository.RezervacijaRepository;
+import rest.repository.TipKorisnikaRepository;
 import rest.repository.ZahtevRepository;
+import rest.repository.ZalbaRepository;
 import rest.repository.ZaposlenjeRepository;
 
 @Service
@@ -85,16 +92,20 @@ public class AdminServiceImpl implements AdminService {
 	private ZahtevRepository zahtevRepository;
 	private EReceptRepository ereceptRepository;
 	private DermatologRepository dermatologRepository;
+	private TipKorisnikaRepository tipRepository;
+	private ZalbaRepository zalbaRepository;
 
 	private Environment env;
 	private JavaMailSender javaMailSender;
 	
 	@Autowired
-	public AdminServiceImpl(PonudaRepository imar, Environment env, JavaMailSender jms, NarudzbenicaRepozitory nr, DobavljacRepository dr, ApotekeRepository ar, 
+	public AdminServiceImpl(ZalbaRepository zalbrs,TipKorisnikaRepository tpkr,PonudaRepository imar, Environment env, JavaMailSender jms, NarudzbenicaRepozitory nr, DobavljacRepository dr, ApotekeRepository ar, 
 			CenaRepository cr, DostupanProizvodRepository dpr, PreparatRepository pr, AdminApotekeRepository aar, AkcijaPromocijaService aps, PacijentRepository pacRepo,
 			PregledRepository pregledRepo, RezervacijaRepository rezervacijaRepo, NotifikacijaRepository notifikacijaRepo, KorisnikRepository korisnikRepo,
 			ZaposlenjeRepository zaposlenjeRepo, ZahtevRepository zahtevRepo, EReceptRepository erecepRepo, DermatologRepository dermatologRepo) {
 		this.ponudaRepository = imar;
+		this.zalbaRepository = zalbrs;
+		this.tipRepository = tpkr;
 		this.env = env;
 		this.javaMailSender = jms;
 		this.narudzbenicaRepository = nr;
@@ -165,9 +176,12 @@ public class AdminServiceImpl implements AdminService {
 
 	@Override
 	public void registerPricelist(CenovnikDTO cenovnikDTO, int idApoteke) throws Exception {
-		Apoteka apoteka = apotekeRepository.findById(idApoteke).get();
+		Apoteka apoteka = apotekeRepository.getOneById(idApoteke);
+		
+		if (apoteka == null)
+			return;
+
 		Cena cenovnik = new Cena();
-		cenovnik.setApoteka(apoteka);
 		for (DostupanProizvodDTO dpDTO : cenovnikDTO.getDostupniProizvodi()) {
 			Preparat p = preparatRepository.getPreparatByName(dpDTO.getPreparat());
 			DostupanProizvod dp = new DostupanProizvod(dpDTO.getKolicina(), dpDTO.getCena(), p);
@@ -177,7 +191,9 @@ public class AdminServiceImpl implements AdminService {
 
 		cenovnik.setPocetakVazenja(cenovnikDTO.getPocetakVazenja());
 		cenovnik.setKrajVazenja(cenovnikDTO.getKrajVazenja());
+		apoteka.addCena(cenovnik);
 		cenaRepository.save(cenovnik);
+		apotekeRepository.save(apoteka);
 	}
 
 	@Override
@@ -202,13 +218,22 @@ public class AdminServiceImpl implements AdminService {
 	@Override
 	public CenovnikDTO findPricelistForPharmacy(int pharmacyId) {
 		Cena cenovnik = cenaRepository.getLatestPricelistForPharmacy(pharmacyId, LocalDate.now());
+
 		if (cenovnik == null) {
 			cenovnik = new Cena();
-			Apoteka apoteka = apotekeRepository.findById(pharmacyId).get();
+			Apoteka apoteka = null;
+			Optional<Apoteka> apotekaOptional = apotekeRepository.findById(pharmacyId);
+
+			if (!apotekaOptional.isPresent())
+				return null;
+			
+			apoteka = apotekaOptional.get();
+
 			cenovnik.setApoteka(apoteka);
 			cenovnik.setPocetakVazenja(LocalDate.now());
 			cenaRepository.save(cenovnik);
 		}
+
 		CenovnikDTO cenovnikDTO = new CenovnikDTO(cenovnik);
 
 		return cenovnikDTO;
@@ -216,7 +241,14 @@ public class AdminServiceImpl implements AdminService {
 
 	@Override
 	public void registerPromotion(CenovnikDTO pricelistDTO, int adminId, String text) throws Exception {
-		AdminApoteke admin = adminApotekeRepository.findById(adminId).get();
+		AdminApoteke admin = null;
+		Optional<AdminApoteke> adminOptional = adminApotekeRepository.findById(adminId);
+
+		if (!adminOptional.isPresent())
+			return;
+
+		admin = adminOptional.get();
+
 		AkcijaPromocija ap = new AkcijaPromocija(text, admin);
 		akcijaPromocijaService.create(ap);
 
@@ -256,9 +288,9 @@ public class AdminServiceImpl implements AdminService {
 				dpToDelete = dp;
 			}
 		}
+		dostupanProizvodRepository.deleteById(productId);
 		cenovnik.getDostupniProizvodi().remove(dpToDelete);
 		cenaRepository.save(cenovnik);
-		dostupanProizvodRepository.deleteById(productId);
 	}
 
 	@Override
@@ -275,15 +307,30 @@ public class AdminServiceImpl implements AdminService {
 
 	@Override
 	public void updateStatusOfOrder(int orderId) {
-		Narudzbenica n = narudzbenicaRepository.findById(orderId).get();
+		Narudzbenica n = null;
+		Optional<Narudzbenica> nOptional = narudzbenicaRepository.findById(orderId);
+
+		if (!nOptional.isPresent())
+			return;
+
+		n = nOptional.get();
+
 		n.setStatus(StatusNarudzbenice.OBRADJENA);
 		narudzbenicaRepository.save(n);
 	}
 
 	@Override
 	public void updateStatusOfOffers(Collection<PonudaDTO> offers, int orderId, int offerId) {
+		Ponuda p = null;
+		Optional<Ponuda> pOptional = ponudaRepository.findById(offerId);
+
+		if (!pOptional.isPresent())
+			return;
+
+		p = pOptional.get();
+
 		ponudaRepository.updateOffersStatus(orderId);
-		Ponuda p = ponudaRepository.findById(offerId).get();
+
 		p.setStatus(StatusPonude.PRIHVACENA);
 		ponudaRepository.save(p);
 
@@ -293,15 +340,33 @@ public class AdminServiceImpl implements AdminService {
 	@Override
 	public void addProductToPharmacy(PreparatDTO preparat, int pharmacyId, double price) {
 		Cena cenovnik = cenaRepository.getLatestPricelistForPharmacy(pharmacyId, LocalDate.now());
+
 		if (cenovnik == null) {
-			Apoteka apoteka = apotekeRepository.findById(pharmacyId).get();
+			Apoteka apoteka = null;
+			Optional<Apoteka> apotekaOptional = apotekeRepository.findById(pharmacyId);
+
+			if (!apotekaOptional.isPresent())
+				return;
+
+			apoteka = apotekaOptional.get();
+
 			cenovnik = new Cena();
 			cenovnik.setApoteka(apoteka);
 			cenovnik.setPocetakVazenja(LocalDate.now());
 		}
-		Preparat p = preparatRepository.findById(preparat.getId()).get();
+
+		Preparat p = null;
+		Optional<Preparat> pOptional = preparatRepository.findById(preparat.getId());
+
+		if (!pOptional.isPresent())
+			return;
+
+		p = pOptional.get();
+
 		DostupanProizvod dp = new DostupanProizvod(0, price, p);
+
 		cenovnik.getDostupniProizvodi().add(dp);
+
 		dostupanProizvodRepository.save(dp);
 		cenaRepository.save(cenovnik);
 	}
@@ -309,11 +374,20 @@ public class AdminServiceImpl implements AdminService {
 	@Override
 	public void registerOrder(NarudzbenicaDTO narudzbenicaDTO, int adminId) {
 		Narudzbenica narudzbenica = new Narudzbenica();
-		AdminApoteke adminApoteke = adminApotekeRepository.findById(adminId).get();
+		AdminApoteke adminApoteke = null;
+		Optional<AdminApoteke> adminApotekeOptional = adminApotekeRepository.findById(adminId);
+
+		if (!adminApotekeOptional.isPresent())
+			return;
+
+		adminApoteke = adminApotekeOptional.get();
+
 		narudzbenica.setAdminApoteke(adminApoteke);
 		narudzbenica.setStatus(StatusNarudzbenice.CEKA_PONUDE);
 		narudzbenica.setRok(narudzbenicaDTO.getRok());
+
 		Preparat p = null;
+
 		for (NaruceniProizvodDTO npDTO : narudzbenicaDTO.getNaruceniProizvodi()) {
 			p = preparatRepository.getPreparatByName(npDTO.getPreparat());
 			narudzbenica.getNaruceniProizvodi().add(new NaruceniProizvod(npDTO.getKolicina(), p, narudzbenica));
@@ -882,7 +956,7 @@ public class AdminServiceImpl implements AdminService {
 	}
 
 	@Override
-	public Pregled registerExamination(int dermatologistId, int pharmacyId, PregledDTO examinationDTO) {
+	public Pregled registerExamination(int dermatologistId, int pharmacyId, PregledDTO examinationDTO) throws Exception{
 
 		// provera poklapanja sa trenutnim datumom/vremenom
 		{
@@ -954,8 +1028,20 @@ public class AdminServiceImpl implements AdminService {
 		examination.setIzvjestaj("");
 		examination.setTip(TipPregleda.PREGLED);
 		examination.setStatus(StatusPregleda.SLOBODAN);
-		examination.setApoteka(apotekeRepository.findById(pharmacyId).get());
-		examination.setZaposleni(korisnikRepository.findById(dermatologistId).get());
+
+		Apoteka a = null;
+		Korisnik k = null;
+		Optional<Apoteka> aOptional = apotekeRepository.findById(pharmacyId);
+		Optional<Korisnik> kOptional = korisnikRepository.findById(dermatologistId);
+
+		if (!aOptional.isPresent() || !kOptional.isPresent())
+			return null;
+
+		a = aOptional.get();
+		k = kOptional.get();
+
+		examination.setApoteka(a);
+		examination.setZaposleni(k);
 		examination.setDatum(examinationDTO.getDatum());
 		examination.setVrijeme(examinationDTO.getVrijeme());
 		examination.setTrajanje(examinationDTO.getTrajanje());
@@ -976,30 +1062,43 @@ public class AdminServiceImpl implements AdminService {
 		Collection<Zaposlenje> employments = zaposlenjeRepository.getEmploymentsForDermatologist(dermatologistDTO.getId());
 
 		for (Zaposlenje z : employments) {
-			// > 0 ako je pocetak naseg termina pre pocetka trenutnog
+			// > 0 ako je pocetak naseg radnog vremena pre pocetka trenutnog
 			int startStartDifference = z.getPocetakRadnogVremena().compareTo(dermatologistDTO.getPocetakRadnogVremena());
-			// > 0 ako je kraj naseg termina pre kraja trenutnog
+			// > 0 ako je kraj naseg radnog vremena pre kraja trenutnog
 			int endEndDifference = z.getKrajRadnogVremena().compareTo(dermatologistDTO.getKrajRadnogVremena());
-			// > 0 ako je kraj naseg termina pre pocetka trenutnog
+			// > 0 ako je kraj naseg radnog vremena pre pocetka trenutnog
 			int startEndDifference = z.getPocetakRadnogVremena().compareTo(dermatologistDTO.getKrajRadnogVremena());
-			// > 0 ako je pocetak naseg termina pre kraja trenutnog
+			// > 0 ako je pocetak naseg radnog vremena pre kraja trenutnog
 			int endStartDifference = z.getKrajRadnogVremena().compareTo(dermatologistDTO.getPocetakRadnogVremena());
+
 			boolean startInBetween = startStartDifference < 0 && endStartDifference > 0;
 			boolean endInBetween = startEndDifference < 0 && endEndDifference > 0;
 			boolean wrapping = startStartDifference > 0 && endEndDifference < 0;
+
 			if (startInBetween || endInBetween || wrapping) {
 				return null;
 			}
 		}
 
-		Apoteka a = apotekeRepository.findById(pharmacyId).get();
-		Dermatolog d = dermatologRepository.findById(dermatologistDTO.getId()).get();
-		Zaposlenje z = new Zaposlenje(dermatologistDTO.getPocetakRadnogVremena(), dermatologistDTO.getKrajRadnogVremena(), a, d);
-		d.addZaposlenje(z);
-		zaposlenjeRepository.save(z);
-		dermatologRepository.save(d);
+		Apoteka a = null;
+		Dermatolog d = null;
+		Optional<Apoteka> aOptional = apotekeRepository.findById(pharmacyId);
+		Optional<Dermatolog> dOptional = dermatologRepository.findById(dermatologistDTO.getId());
 
-		return z;
+		if (aOptional.isPresent() && dOptional.isPresent()) {
+			a = aOptional.get();
+			d = dOptional.get();
+
+			Zaposlenje z = new Zaposlenje(dermatologistDTO.getPocetakRadnogVremena(), dermatologistDTO.getKrajRadnogVremena(), a, d);
+			d.addZaposlenje(z);
+
+			zaposlenjeRepository.save(z);
+			dermatologRepository.save(d);
+
+			return z;
+		}
+
+		return null;
 	}
 
 	@Override
@@ -1026,12 +1125,124 @@ public class AdminServiceImpl implements AdminService {
 		notifikacijaRepository.deleteNotificationsOfUser(dermatologistId);
 		Dermatolog d = dermatologRepository.getDermatologistWithEmployments(dermatologistId);
 		Zaposlenje z = zaposlenjeRepository.getEmploymentForDermatologist(pharmacyId, dermatologistId);
+
 		int zaposlenjeId = z.getId();
 		d.removeZaposlenje(z);
+
 		dermatologRepository.save(d);
 		zaposlenjeRepository.save(z);
 		zaposlenjeRepository.deleteForDermatologist(zaposlenjeId);
 		pregledRepository.deleteOpenAppointmentsForDermatologistForPharmacy(pharmacyId, dermatologistId);
 	}
 
+	@Override
+	public TipKorisnikaDTO createType(TipKorisnikaDTO t) {
+		TipKorisnika tk = new TipKorisnika();
+		tk.setBodovi(t.getBodovi());
+		tk.setNaziv(t.getNaziv());
+		tk.setPopust(t.getPopust());
+		if(tipRepository.getTipWithPoints(tk.getBodovi()) != null) {
+			return null;
+		}
+		tipRepository.save(tk);
+		Collection<Pacijent> pacijenti = pacijentRepository.findAll();
+		Collection<TipKorisnika> tSort= tipRepository.getAllOrdered();
+		for (Pacijent pacijent : pacijenti) {
+			for (TipKorisnika tipKorisnika : tSort) {
+				if(pacijent.getBrojPoena() >= tipKorisnika.getBodovi()) {
+					pacijent.setTipKorisnika(tipKorisnika);
+					break;
+				}
+			}
+		}
+		pacijentRepository.saveAll(pacijenti);
+		return t;
+		
+	}
+
+	@Override
+	public Collection<NarudzbenicaDTO> getAvailableNarudzbenice(int id) {
+		Collection<Narudzbenica> nars = narudzbenicaRepository.getAllWithProizvodi();
+		 //System.out.println("THE DUZINA OVDE JE " + nars.size());
+		 Collection<NarudzbenicaDTO> newnar = new ArrayList<NarudzbenicaDTO>();
+		 for (Narudzbenica narudzbenica : nars) {
+			//System.out.println("OVO JE NARUDZBENICA SA ID " +narudzbenica.getId());
+			boolean foundDob = false;
+			if(narudzbenica.getStatus().equals(StatusNarudzbenice.CEKA_PONUDE)) {
+				for (Ponuda pon : narudzbenica.getPonude()) {
+					if(pon.getDobavljac().getId() == id) {
+						foundDob = true;
+						break;
+					}
+				}
+				if(!foundDob) {
+					NarudzbenicaDTO nar = new NarudzbenicaDTO(narudzbenica);
+					newnar.add(nar);
+					
+				}
+				
+			}
+		}
+
+		 return newnar;
+	}
+
+	@Override
+	public NarudzbenicaDTO getNarudzbenicaById(int id) {
+		Narudzbenica n = null;
+		Optional<Narudzbenica> nOptional = narudzbenicaRepository.findById(id);
+
+		NarudzbenicaDTO narDTO = null;
+		if (nOptional.isPresent()) {
+			n = nOptional.get();
+			narDTO = new NarudzbenicaDTO(n);
+		}
+
+		return narDTO;
+	}
+
+	@Override
+	public void createOffer(PonudaDTO p) {
+		Narudzbenica n = null;
+		Optional<Narudzbenica> nOptional = narudzbenicaRepository.findById(p.getIdNarudzbenice());
+
+		if (nOptional.isPresent()) {
+			n = nOptional.get();
+			Dobavljac d = dobavljacRepository.getSupplierByUsername(p.getDobavljac());
+			Ponuda pon = new Ponuda(StatusPonude.CEKA_NA_ODGOVOR, p.getUkupnaCena(), p.getRokIsporuke(), n, d);
+
+			ponudaRepository.save(pon);
+			d.addPonuda(pon);
+			dobavljacRepository.save(d);
+		}
+	}
+
+	@Override
+	public void updateZalba(int id) {
+		Zalba z = null;
+		Optional<Zalba> zOptional = zalbaRepository.findById(id);
+
+		if (zOptional.isPresent()) {
+			z = zOptional.get();
+			z.setAnswered(true);
+			zalbaRepository.save(z);
+		}
+	}
+
+	@Override
+	public void updateOffer(int id, String date, double price) {
+		Ponuda p = null;
+		Optional<Ponuda> pOptional = ponudaRepository.findById(id);
+
+		if (pOptional.isPresent()) {
+			p = pOptional.get();
+			LocalDate d = LocalDate.parse(date);
+
+			p.setRokIsporuke(d);
+			p.setUkupnaCena(price);
+			p.setStatus(StatusPonude.CEKA_NA_ODGOVOR);
+
+			ponudaRepository.save(p);
+		}
+	}
 }
