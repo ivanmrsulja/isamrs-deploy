@@ -55,9 +55,9 @@ public class PreparatServiceTest {
 	
 	@Test
 	public void rezervisiTest() throws Exception {
-		Rezervacija retVal = service.rezervisi(1, 6, 1, LocalDate.of(2021, 11, 11));
+		Rezervacija retVal = service.rezervisi(1, 6, 1, LocalDate.of(2051, 11, 11));
 		
-		assertTrue(retVal.getDatumPreuzimanja().equals(LocalDate.of(2021, 11, 11)));
+		assertTrue(retVal.getDatumPreuzimanja().equals(LocalDate.of(2051, 11, 11)));
 	}
 	
 	@Test
