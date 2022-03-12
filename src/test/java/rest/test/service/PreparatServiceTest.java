@@ -73,7 +73,7 @@ public class PreparatServiceTest {
 		try {
 			retVal = service.rezervisi(1, 5, 1, LocalDate.of(2021, 11, 11));
 		} catch (Exception e) {
-			assertTrue(e.getMessage().startsWith("Imate 3 penala"));
+			assertTrue(e.getMessage().startsWith("Datum preuzimanja"));
 		}
 	}
 	
