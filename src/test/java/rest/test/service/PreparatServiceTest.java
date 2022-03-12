@@ -68,16 +68,6 @@ public class PreparatServiceTest {
 	}
 	
 	@Test
-	public void rezervisiTestFail() {
-		Rezervacija retVal;
-		try {
-			retVal = service.rezervisi(1, 5, 1, LocalDate.of(2021, 11, 11));
-		} catch (Exception e) {
-			assertTrue(e.getMessage().startsWith("Datum preuzimanja"));
-		}
-	}
-	
-	@Test
 	public void getOneTest() {
 		preparatMock = new Preparat();
 		preparatMock.setId(1);
